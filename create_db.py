@@ -8,7 +8,7 @@ try:
                                   port="5432")
     connection.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
     cursor = connection.cursor()
-    sql_create_database = 'create database cat_shelter'
+    sql_create_database = 'create database cat_shelter_1'
     cursor.execute(sql_create_database)
 except (Exception, Error) as error:
     print("Ошибка при работе с PostgreSQL", error)
