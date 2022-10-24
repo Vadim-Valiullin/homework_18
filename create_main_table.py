@@ -9,7 +9,7 @@ def connection():
                                       password="123456",
                                       host="127.0.0.1",
                                       port="5432",
-                                      database="cat_shelter")
+                                      database="cat_shelter_1")
         connection.autocommit = True
         print('Connection Done')
         return connection
