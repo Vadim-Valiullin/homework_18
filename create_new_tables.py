@@ -1,20 +1,5 @@
-import psycopg2
+from create_main_table import *
 from psycopg2 import Error
-
-
-def connection():
-    try:
-        connection = psycopg2.connect(user="postgres",
-                                      password="123456",
-                                      host="127.0.0.1",
-                                      port="5432",
-                                      database="cat_shelter_1")
-        connection.autocommit = True
-        print('Connection Done')
-        return connection
-    except (Exception, Error) as error:
-        print("Ошибка при работе с PostgreSQL", error)
-        return False
 
 
 def create_new_tables(cursor):
@@ -48,24 +33,28 @@ def create_new_tables(cursor):
             ALTER TABLE outcome_type_table
             ADD COLUMN id_outcome_type SERIAL PRIMARY KEY;
             
-            SELECT DISTINCT animal_id, animal_type, name, breed_table.id_breed, color_table.id_color, date_of_birth
+            SELECT DISTINCT id, animal_id, animal_type, name, breed_table.id_breed, color_table.id_color, date_of_birth
             INTO cats_table
             FROM cat_shelter
             JOIN breed_table ON breed_table.breed = cat_shelter.breed
             JOIN color_table ON color_table.color = cat_shelter.color
-            GROUP BY animal_id, animal_type, name, breed_table.id_breed, color_table.id_color, date_of_birth;
+            GROUP BY id, animal_id, animal_type, name, breed_table.id_breed, color_table.id_color, date_of_birth;
             
-            SELECT age_upon_outcome, cats_table.animal_id, outcome_subtype_table.id_outcome_subtype, 
+            ALTER TABLE IF EXISTS cats_table
+            ADD PRIMARY KEY (id);
+            
+            SELECT cat_shelter.id, age_upon_outcome, cats_table.animal_id, outcome_subtype_table.id_outcome_subtype, 
             outcome_type_table.id_outcome_type, outcome_month, outcome_year
             INTO shelter
             FROM cat_shelter
             JOIN cats_table ON cats_table.animal_id = cat_shelter.animal_id
             JOIN outcome_subtype_table ON outcome_subtype_table.outcome_subtype = cat_shelter.outcome_subtype
             JOIN outcome_type_table ON outcome_type_table.outcome_type = cat_shelter.outcome_type
-            GROUP BY age_upon_outcome, cats_table.animal_id, outcome_subtype_table.id_outcome_subtype, outcome_type_table.id_outcome_type, outcome_month, outcome_year;
+            GROUP BY cat_shelter.id, age_upon_outcome, cats_table.animal_id, outcome_subtype_table.id_outcome_subtype, 
+            outcome_type_table.id_outcome_type, outcome_month, outcome_year;
             
-            ALTER TABLE shelter
-            ADD COLUMN id_cat_shelter SERIAL PRIMARY KEY;
+            ALTER TABLE IF EXISTS shelter
+            ADD PRIMARY KEY (id);
             
             ALTER TABLE cats_table
             ADD CONSTRAINT fk_cat_breed FOREIGN KEY (id_breed) REFERENCES breed_table (id_breed);
@@ -75,10 +64,13 @@ def create_new_tables(cursor):
             
             ALTER TABLE shelter
             ADD CONSTRAINT fk_cat_subtype FOREIGN KEY (id_outcome_subtype) REFERENCES outcome_subtype_table (id_outcome_subtype);
-           
+            
             ALTER TABLE shelter
             ADD CONSTRAINT fk_cat_outcome_type FOREIGN KEY (id_outcome_type) REFERENCES outcome_type_table (
             id_outcome_type);
+            
+            ALTER TABLE shelter
+            ADD CONSTRAINT fk_cat_shelter FOREIGN KEY (id) REFERENCES cats_table (id);
             
             CREATE USER Bonnie;
 
